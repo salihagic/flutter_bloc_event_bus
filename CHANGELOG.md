@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Shrunk example size
+
 ## 0.0.3
 
 * Downgraded sdk requirement
