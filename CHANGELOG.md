@@ -1,3 +1,7 @@
+## 0.0.2
+
+* Updated base Event class with copyWith
+
 ## 0.0.1
 
 Initial Version of the package.

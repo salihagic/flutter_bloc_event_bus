@@ -15,6 +15,11 @@ class EventBus extends Cubit<Event> implements IEventBus {
   void send(Event event) => emit(event);
 }
 
-abstract class Event {}
+abstract class Event {
+  dynamic copyWith();
+}
 
-class InitialEvent implements Event {}
+class InitialEvent implements Event {
+  @override
+  dynamic copyWith() {}
+}

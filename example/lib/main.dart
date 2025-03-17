@@ -1,5 +1,7 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc_event_bus/flutter_bloc_event_bus.dart';
 
 // Can you make a nice README.MD documentation that showcases value of this "flutter_bloc_event_bus" package and that showcases how to use it
@@ -48,6 +50,11 @@ class ExampleBusPublisherState implements Event {
   final int value;
 
   ExampleBusPublisherState({required this.value});
+
+  @override
+  ExampleBusPublisherState copyWith({int? value}) {
+    return ExampleBusPublisherState(value: value ?? this.value);
+  }
 }
 
 // A cubit that acts as an event provider, emitting ExampleBusPublisherState events.
@@ -86,6 +93,11 @@ class ExampleBusBridgeState implements Event {
   final int value;
 
   ExampleBusBridgeState({required this.value});
+
+  @override
+  ExampleBusBridgeState copyWith({int? value}) {
+    return ExampleBusBridgeState(value: value ?? this.value);
+  }
 }
 
 // A cubit that emits ExampleBusBridgeState events.

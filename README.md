@@ -39,6 +39,11 @@ class ExampleBusPublisherState implements Event {
   final int value;
 
   ExampleBusPublisherState({required this.value});
+
+  @override
+  ExampleBusPublisherState copyWith({int? value}) {
+    return ExampleBusPublisherState(value: value ?? this.value);
+  }
 }
 
 class ExampleBusPublisherCubit extends BusPublisherCubit<ExampleBusPublisherState> {
@@ -74,6 +79,11 @@ class ExampleBusBridgeState implements Event {
   final int value;
 
   ExampleBusBridgeState({required this.value});
+
+  @override
+  ExampleBusBridgeState copyWith({int? value}) {
+    return ExampleBusBridgeState(value: value ?? this.value);
+  }
 }
 
 class ExampleBusBridgeCubit extends BusBridgeCubit<ExampleBusBridgeState> {
