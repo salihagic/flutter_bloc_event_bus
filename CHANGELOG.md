@@ -1,3 +1,7 @@
+## 0.0.3
+
+* Downgraded sdk requirement
+
 ## 0.0.2
 
 * Updated base Event class with copyWith
