@@ -14,17 +14,13 @@ void main() {
 
 void exampleWithCubits() {
   // Create an instance of ExampleBusPublisherCubit with an initial state (value = 0).
-  final exampleBusPublisherCubit = ExampleBusPublisherCubit(
-    ExampleBusPublisherState(value: 0),
-  );
+  final exampleBusPublisherCubit = ExampleBusPublisherCubit(ExampleBusPublisherState(value: 0));
 
   // Create an instance of ExampleBusObserverCubit with an initial state of 0.
   final exampleBusObserverCubit = ExampleBusObserverCubit(0);
 
   // Create an instance of ExampleBusBridgeCubit with an initial state (value = 0).
-  final exampleBusBridgeCubit = ExampleBusBridgeCubit(
-    ExampleBusBridgeState(value: 0),
-  );
+  final exampleBusBridgeCubit = ExampleBusBridgeCubit(ExampleBusBridgeState(value: 0));
 
   // Emit a new event with value = 1 from ExampleBusPublisherCubit.
   exampleBusPublisherCubit.update(1);
@@ -58,8 +54,7 @@ class ExampleBusPublisherState implements Event {
 }
 
 // A cubit that acts as an event provider, emitting ExampleBusPublisherState events.
-class ExampleBusPublisherCubit
-    extends BusPublisherCubit<ExampleBusPublisherState> {
+class ExampleBusPublisherCubit extends BusPublisherCubit<ExampleBusPublisherState> {
   ExampleBusPublisherCubit(super.initialState);
 
   // Method to update the state by emitting a new event with a given value.
@@ -74,16 +69,12 @@ class ExampleBusObserverCubit extends BusObserverCubit<int> {
   void observe(Object event) {
     // If the event is of type ExampleBusPublisherState, print a message to the console.
     if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverCubit])',
-      );
+      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverCubit])');
     }
 
     // If the event is of type ExampleBusBridgeState, print a different message.
     if (event is ExampleBusBridgeState) {
-      debugPrint(
-        'New ExampleBusBridgeState state with value: ${event.value} (detected in [ExampleBusObserverCubit])',
-      );
+      debugPrint('New ExampleBusBridgeState state with value: ${event.value} (detected in [ExampleBusObserverCubit])');
     }
   }
 }
@@ -111,26 +102,20 @@ class ExampleBusBridgeCubit extends BusBridgeCubit<ExampleBusBridgeState> {
   void observe(Object event) {
     // If the event is of type ExampleBusPublisherState, print a message.
     if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeCubit])',
-      );
+      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeCubit])');
     }
   }
 }
 
 void exampleWithBlocs() {
   // Create an instance of ExampleBusPublisherBloc with an initial state (value = 0).
-  final exampleBusPublisherBloc = ExampleBusPublisherBloc(
-    ExampleBusPublisherState(value: 0),
-  );
+  final exampleBusPublisherBloc = ExampleBusPublisherBloc(ExampleBusPublisherState(value: 0));
 
   // Create an instance of ExampleBusObserverBloc with an initial state of 0.
   final exampleBusObserverBloc = ExampleBusObserverBloc(0);
 
   // Create an instance of ExampleBusBridgeBloc with an initial state (value = 0).
-  final exampleBusBridgeBloc = ExampleBusBridgeBloc(
-    ExampleBusBridgeState(value: 0),
-  );
+  final exampleBusBridgeBloc = ExampleBusBridgeBloc(ExampleBusBridgeState(value: 0));
 
   // Dispatch a new event with value = 1 to ExampleBusPublisherBloc.
   exampleBusPublisherBloc.add(ExampleBusPublisherEvent(value: 1));
@@ -159,42 +144,32 @@ class ExampleBusPublisherEvent {
 }
 
 // A Bloc that acts as an event provider, emitting ExampleBusPublisherState states.
-class ExampleBusPublisherBloc
-    extends
-        BusPublisherBloc<ExampleBusPublisherEvent, ExampleBusPublisherState> {
+class ExampleBusPublisherBloc extends BusPublisherBloc<ExampleBusPublisherEvent, ExampleBusPublisherState> {
   ExampleBusPublisherBloc(super.initialState) {
     on<ExampleBusPublisherEvent>(_update);
   }
 
   // Method to update the state by emitting a new state with a given value.
-  Future<void> _update(
-    ExampleBusPublisherEvent event,
-    Emitter<ExampleBusPublisherState> emit,
-  ) async => emit(ExampleBusPublisherState(value: event.value));
+  Future<void> _update(ExampleBusPublisherEvent event, Emitter<ExampleBusPublisherState> emit) async => emit(ExampleBusPublisherState(value: event.value));
 }
 
 // Defines a generic event type that ExampleBusObserverBloc will observe.
 class ExampleBusObserverEvent {}
 
 // A Bloc that listens to events from event providers and reacts accordingly.
-class ExampleBusObserverBloc
-    extends BusObserverBloc<ExampleBusObserverEvent, int> {
+class ExampleBusObserverBloc extends BusObserverBloc<ExampleBusObserverEvent, int> {
   ExampleBusObserverBloc(super.initialState);
 
   @override
   void observe(Object event) {
     // If the event is of type ExampleBusPublisherState, print a message to the console.
     if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverBloc])',
-      );
+      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverBloc])');
     }
 
     // If the event is of type ExampleBusBridgeState, print a different message.
     if (event is ExampleBusBridgeState) {
-      debugPrint(
-        'New ExampleBusBridgeState state with value: ${event.value} (detected in [ExampleBusObserverBloc])',
-      );
+      debugPrint('New ExampleBusBridgeState state with value: ${event.value} (detected in [ExampleBusObserverBloc])');
     }
   }
 }
@@ -207,25 +182,19 @@ class ExampleBusBridgeEvent {
 }
 
 // A Bloc that emits ExampleBusBridgeState states.
-class ExampleBusBridgeBloc
-    extends BusBridgeBloc<ExampleBusBridgeEvent, ExampleBusBridgeState> {
+class ExampleBusBridgeBloc extends BusBridgeBloc<ExampleBusBridgeEvent, ExampleBusBridgeState> {
   ExampleBusBridgeBloc(super.initialState) {
     on<ExampleBusBridgeEvent>(_update);
   }
 
   // Method to update the state by emitting a new ExampleBusBridgeState.
-  Future<void> _update(
-    ExampleBusBridgeEvent event,
-    Emitter<ExampleBusBridgeState> emit,
-  ) async => emit(ExampleBusBridgeState(value: event.value));
+  Future<void> _update(ExampleBusBridgeEvent event, Emitter<ExampleBusBridgeState> emit) async => emit(ExampleBusBridgeState(value: event.value));
 
   @override
   void observe(Object event) {
     // If the event is of type ExampleBusPublisherState, print a message.
     if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeBloc])',
-      );
+      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeBloc])');
     }
   }
 }
