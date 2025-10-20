@@ -6,6 +6,7 @@ abstract class IEventBus {
   Stream<Event> get stream;
 
   void send(Event event);
+  void close();
 }
 
 class EventBus extends Cubit<Event> implements IEventBus {

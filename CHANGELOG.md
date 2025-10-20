@@ -1,3 +1,7 @@
+## 0.0.6
+
+* Updated environment
+
 ## 0.0.5
 
 * Updated dependencies
