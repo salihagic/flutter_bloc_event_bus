@@ -51,9 +51,9 @@ class HomePage extends StatelessWidget {
       body: BlocListener<NotificationCubit, String?>(
         listener: (context, message) {
           if (message != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(message)));
           }
         },
         child: Padding(
@@ -74,7 +74,8 @@ class HomePage extends StatelessWidget {
                                 ? Icons.person
                                 : Icons.person_outline,
                             size: 48,
-                            color: state.isLoggedIn ? Colors.green : Colors.grey,
+                            color:
+                                state.isLoggedIn ? Colors.green : Colors.grey,
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -127,8 +128,9 @@ class HomePage extends StatelessWidget {
                           else
                             ...state.items.map(
                               (item) => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
                                 child: Text('- $item'),
                               ),
                             ),
@@ -136,11 +138,13 @@ class HomePage extends StatelessWidget {
                           BlocBuilder<AuthCubit, AuthState>(
                             builder: (context, authState) {
                               return ElevatedButton.icon(
-                                onPressed: authState.isLoggedIn
-                                    ? () => context.read<CartCubit>().addItem(
-                                          'Item ${state.items.length + 1}',
-                                        )
-                                    : null,
+                                onPressed:
+                                    authState.isLoggedIn
+                                        ? () =>
+                                            context.read<CartCubit>().addItem(
+                                              'Item ${state.items.length + 1}',
+                                            )
+                                        : null,
                                 icon: const Icon(Icons.add),
                                 label: Text(
                                   authState.isLoggedIn
@@ -173,9 +177,11 @@ class HomePage extends StatelessWidget {
                       SizedBox(height: 8),
                       Text('- AuthCubit publishes login/logout events'),
                       Text(
-                          '- CartCubit observes auth events and clears on logout'),
+                        '- CartCubit observes auth events and clears on logout',
+                      ),
                       Text(
-                          '- NotificationCubit observes all events for alerts'),
+                        '- NotificationCubit observes all events for alerts',
+                      ),
                       SizedBox(height: 8),
                       Text(
                         'Try logging in, adding items, then logging out!',
