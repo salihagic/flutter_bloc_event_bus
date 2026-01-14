@@ -1,3 +1,7 @@
+## 1.0.0
+
+* Dependencies upgraded and docs updated
+
 ## 0.0.6
 
 * Updated environment

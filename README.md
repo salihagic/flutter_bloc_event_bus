@@ -1,221 +1,319 @@
 # flutter_bloc_event_bus
 
-`flutter_bloc_event_bus` is a powerful package that combines the benefits of the `bloc` state management pattern with an event bus system. It allows Flutter applications to efficiently manage state, facilitate event-driven communication between components, and improve maintainability.
+A lightweight Flutter package that adds event-driven communication capabilities to [flutter_bloc](https://pub.dev/packages/flutter_bloc). It enables decoupled, cross-component communication through a global event bus while maintaining the robustness of the BLoC pattern.
 
-## 📌 Why Use flutter_bloc_event_bus?
+[![pub package](https://img.shields.io/pub/v/flutter_bloc_event_bus.svg)](https://pub.dev/packages/flutter_bloc_event_bus)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-- ✅ **Seamless Event-Driven Architecture** – Enhances modularity by allowing different components to communicate via an event bus.
-- ✅ **Built on top of BLoC** – Leverages the robustness of `bloc` for state management while providing an event-driven extension.
-- ✅ **Decoupled Communication** – Enables event-driven communication between widgets, cubits, and blocs without tight coupling.
-- ✅ **Easy to Implement** – Offers simple APIs for publishing, observing, and mediating events.
+## Features
 
-## 🚀 Getting Started
+- **Decoupled Communication** - Components communicate through events without direct dependencies
+- **Built on flutter_bloc** - Seamlessly integrates with your existing BLoC/Cubit architecture
+- **Three Component Types** - Publisher, Observer, and Bridge patterns for different use cases
+- **Automatic Lifecycle Management** - Subscriptions are properly cleaned up when components are closed
+- **Works with Both Cubits and Blocs** - Full support for both state management approaches
 
-### 1️⃣ Install the Package
+## Installation
 
-Add the package to your `pubspec.yaml`:
+Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_bloc_event_bus: latest_version
-  flutter_bloc: latest_version
+  flutter_bloc_event_bus: ^1.0.0
 ```
 
-Run:
-```sh
+Then run:
+
+```bash
 flutter pub get
 ```
 
-### 2️⃣ Usage Examples
+## Quick Start
 
-## 🟢 Using Cubits
+### 1. Define Your Event State
 
-### Example: `BusPublisherCubit` (Emitting Events)
-
-```dart
-import 'package:flutter_bloc_event_bus/flutter_bloc_event_bus.dart';
-
-class ExampleBusPublisherState implements Event {
-  final int value;
-
-  ExampleBusPublisherState({required this.value});
-
-  @override
-  ExampleBusPublisherState copyWith({int? value}) {
-    return ExampleBusPublisherState(value: value ?? this.value);
-  }
-}
-
-class ExampleBusPublisherCubit extends BusPublisherCubit<ExampleBusPublisherState> {
-  ExampleBusPublisherCubit(super.initialState);
-
-  void update(int value) => emit(ExampleBusPublisherState(value: value));
-}
-```
-
-### Example: `BusObserverCubit` (Observing Events)
+States that will be published to the event bus must implement the `Event` interface:
 
 ```dart
-class ExampleBusObserverCubit extends BusObserverCubit<int> {
-  ExampleBusObserverCubit(super.initialState);
+class CounterState implements Event {
+  final int count;
+
+  CounterState({required this.count});
 
   @override
-  void observe(Object event) {
-    if (event is ExampleBusPublisherState) {
-      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverCubit])');
-    }
-
-    if (event is ExampleBusBridgeState) {
-      debugPrint('New ExampleBusBridgeState with value: ${event.value} (detected in [ExampleBusObserverCubit])');
-    }
+  CounterState copyWith({int? count}) {
+    return CounterState(count: count ?? this.count);
   }
 }
 ```
 
-### Example: `BusBridgeCubit` (Reacting to Events)
+### 2. Create a Publisher
+
+A publisher broadcasts its state changes to the event bus:
 
 ```dart
-class ExampleBusBridgeState implements Event {
-  final int value;
+class CounterCubit extends BusPublisherCubit<CounterState> {
+  CounterCubit() : super(CounterState(count: 0));
 
-  ExampleBusBridgeState({required this.value});
-
-  @override
-  ExampleBusBridgeState copyWith({int? value}) {
-    return ExampleBusBridgeState(value: value ?? this.value);
-  }
+  void increment() => emit(CounterState(count: state.count + 1));
 }
+```
 
-class ExampleBusBridgeCubit extends BusBridgeCubit<ExampleBusBridgeState> {
-  ExampleBusBridgeCubit(super.initialState);
+### 3. Create an Observer
 
-  void update(int value) => emit(ExampleBusBridgeState(value: value));
+An observer listens to events from the bus and reacts to them:
+
+```dart
+class LoggerCubit extends BusObserverCubit<void> {
+  LoggerCubit() : super(null);
 
   @override
   void observe(Object event) {
-    if (event is ExampleBusPublisherState) {
-      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeCubit])');
+    if (event is CounterState) {
+      print('Counter changed to: ${event.count}');
     }
   }
 }
 ```
 
-### Example: Running Cubits
+### 4. Use Them Together
 
 ```dart
-void exampleWithCubits() {
-  final exampleBusPublisherCubit = ExampleBusPublisherCubit(ExampleBusPublisherState(value: 0));
-  final exampleBusObserverCubit = ExampleBusObserverCubit(0);
-  final exampleBusBridgeCubit = ExampleBusBridgeCubit(ExampleBusBridgeState(value: 0));
+void main() {
+  final counter = CounterCubit();
+  final logger = LoggerCubit();
 
-  exampleBusPublisherCubit.update(1);
-  exampleBusBridgeCubit.update(1);
-  exampleBusBridgeCubit.update(2);
+  counter.increment(); // Logger prints: "Counter changed to: 1"
+  counter.increment(); // Logger prints: "Counter changed to: 2"
 }
 ```
 
----
+## Component Types
 
-## 🔵 Using Blocs
+### BusPublisherCubit / BusPublisherBloc
 
-### Example: `BusPublisherBloc` (Dispatching Events)
+**Purpose:** Broadcasts state changes to the event bus.
+
+Use when you have a component whose state should be observable by other components in your app.
 
 ```dart
-class ExampleBusPublisherEvent {
-  final int value;
+class UserSessionCubit extends BusPublisherCubit<UserSessionState> {
+  UserSessionCubit() : super(UserSessionState.guest());
 
-  ExampleBusPublisherEvent({required this.value});
-}
-
-class ExampleBusPublisherBloc extends BusPublisherBloc<ExampleBusPublisherEvent, ExampleBusPublisherState> {
-  ExampleBusPublisherBloc(super.initialState) {
-    on<ExampleBusPublisherEvent>(_update);
-  }
-
-  Future<void> _update(ExampleBusPublisherEvent event, Emitter<ExampleBusPublisherState> emit) async => 
-      emit(ExampleBusPublisherState(value: event.value));
+  void login(User user) => emit(UserSessionState.authenticated(user));
+  void logout() => emit(UserSessionState.guest());
 }
 ```
 
-### Example: `BusObserverBloc` (Observing Events)
+### BusObserverCubit / BusObserverBloc
+
+**Purpose:** Listens to events from the bus and reacts to them.
+
+Use when a component needs to respond to state changes from other components without direct coupling.
 
 ```dart
-class ExampleBusObserverEvent {}
+class AnalyticsCubit extends BusObserverCubit<void> {
+  final AnalyticsService _analytics;
 
-class ExampleBusObserverBloc extends BusObserverBloc<ExampleBusObserverEvent, int> {
-  ExampleBusObserverBloc(super.initialState);
+  AnalyticsCubit(this._analytics) : super(null);
 
   @override
   void observe(Object event) {
-    if (event is ExampleBusPublisherState) {
-      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverBloc])');
-    }
-
-    if (event is ExampleBusBridgeState) {
-      debugPrint('New ExampleBusBridgeState with value: ${event.value} (detected in [ExampleBusObserverBloc])');
+    if (event is UserSessionState && event.isAuthenticated) {
+      _analytics.trackLogin();
     }
   }
 }
 ```
 
-### Example: `BusBridgeBloc` (Handling Events)
+### BusBridgeCubit / BusBridgeBloc
+
+**Purpose:** Both publishes its own state AND observes events from the bus.
+
+Use for components that need two-way communication - they react to external events while also broadcasting their own state changes.
 
 ```dart
-class ExampleBusBridgeEvent {
-  final int value;
+class CartState implements Event {
+  final List<Product> items;
 
-  ExampleBusBridgeEvent({required this.value});
+  CartState({required this.items});
+
+  @override
+  CartState copyWith({List<Product>? items}) {
+    return CartState(items: items ?? this.items);
+  }
 }
 
-class ExampleBusBridgeBloc extends BusBridgeBloc<ExampleBusBridgeEvent, ExampleBusBridgeState> {
-  ExampleBusBridgeBloc(super.initialState) {
-    on<ExampleBusBridgeEvent>(_update);
-  }
+class CartCubit extends BusBridgeCubit<CartState> {
+  CartCubit() : super(CartState(items: []));
 
-  Future<void> _update(ExampleBusBridgeEvent event, Emitter<ExampleBusBridgeState> emit) async =>
-      emit(ExampleBusBridgeState(value: event.value));
+  void addItem(Product product) {
+    emit(CartState(items: [...state.items, product]));
+  }
 
   @override
   void observe(Object event) {
-    if (event is ExampleBusPublisherState) {
-      debugPrint('New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeBloc])');
+    // Clear cart when user logs out
+    if (event is UserSessionState && !event.isAuthenticated) {
+      emit(CartState(items: []));
     }
   }
 }
 ```
 
-### Example: Running Blocs
+## Using with Blocs
+
+The same patterns work with Blocs. The key difference is that Blocs use events to trigger state changes:
 
 ```dart
-void exampleWithBlocs() {
-  final exampleBusPublisherBloc = ExampleBusPublisherBloc(ExampleBusPublisherState(value: 0));
-  final exampleBusObserverBloc = ExampleBusObserverBloc(0);
-  final exampleBusBridgeBloc = ExampleBusBridgeBloc(ExampleBusBridgeState(value: 0));
+// Events
+sealed class CounterEvent {}
+class IncrementPressed extends CounterEvent {}
 
-  exampleBusPublisherBloc.add(ExampleBusPublisherEvent(value: 1));
-  exampleBusBridgeBloc.add(ExampleBusBridgeEvent(value: 1));
-  exampleBusBridgeBloc.add(ExampleBusBridgeEvent(value: 2));
+// State
+class CounterState implements Event {
+  final int count;
+  CounterState({required this.count});
+
+  @override
+  CounterState copyWith({int? count}) => CounterState(count: count ?? this.count);
+}
+
+// Bloc
+class CounterBloc extends BusPublisherBloc<CounterEvent, CounterState> {
+  CounterBloc() : super(CounterState(count: 0)) {
+    on<IncrementPressed>((event, emit) {
+      emit(CounterState(count: state.count + 1));
+    });
+  }
 }
 ```
 
----
+## Real-World Example: Authentication Flow
 
-## 🛠️ Advanced Use Cases
+Here's how you might use the event bus for a common authentication scenario:
 
-- Using `BusPublisherBloc` for event-driven state management with Blocs.
-- Implementing a global event bus for communication between independent UI elements.
-- Creating a centralized mediator for managing multiple event sources.
+```dart
+// Auth states published to the bus
+class AuthState implements Event {
+  final User? user;
+  bool get isLoggedIn => user != null;
 
-## 🏆 Conclusion
+  AuthState({this.user});
 
-`flutter_bloc_event_bus` simplifies event-driven state management, making it easier to decouple components in Flutter applications. Whether you're working with Cubits or Blocs, this package provides a structured way to handle application-wide events.
+  @override
+  AuthState copyWith({User? user}) => AuthState(user: user);
+}
 
----
+// Auth cubit publishes login/logout events
+class AuthCubit extends BusPublisherCubit<AuthState> {
+  AuthCubit() : super(AuthState());
 
-### 📜 License
+  Future<void> login(String email, String password) async {
+    final user = await authService.login(email, password);
+    emit(AuthState(user: user));
+  }
 
-MIT License
+  void logout() => emit(AuthState());
+}
 
----
+// Profile cubit observes auth events and clears data on logout
+class ProfileCubit extends BusObserverCubit<ProfileState> {
+  ProfileCubit() : super(ProfileState.empty());
 
-Happy coding! 🚀
+  @override
+  void observe(Object event) {
+    if (event is AuthState && !event.isLoggedIn) {
+      emit(ProfileState.empty()); // Clear profile on logout
+    }
+  }
+}
+
+// Cart cubit is a bridge - publishes cart state AND observes auth
+class CartCubit extends BusBridgeCubit<CartState> {
+  CartCubit() : super(CartState.empty());
+
+  void addItem(Product p) => emit(state.copyWith(items: [...state.items, p]));
+
+  @override
+  void observe(Object event) {
+    if (event is AuthState && !event.isLoggedIn) {
+      emit(CartState.empty()); // Clear cart on logout
+    }
+  }
+}
+```
+
+## Architecture Diagram
+
+```
+┌─────────────────┐         ┌─────────────────┐
+│  AuthCubit      │         │  CartCubit      │
+│  (Publisher)    │────────>│  (Bridge)       │<────┐
+└─────────────────┘         └─────────────────┘     │
+        │                           │               │
+        │                           │               │
+        v                           v               │
+   ┌─────────────────────────────────────────┐     │
+   │              Event Bus                   │     │
+   └─────────────────────────────────────────┘     │
+        │                           │               │
+        │                           │               │
+        v                           v               │
+┌─────────────────┐         ┌─────────────────┐    │
+│  ProfileCubit   │         │  AnalyticsCubit │    │
+│  (Observer)     │         │  (Observer)     │────┘
+└─────────────────┘         └─────────────────┘
+```
+
+## API Reference
+
+### Event Interface
+
+All states published to the bus must implement `Event`:
+
+```dart
+abstract class Event {
+  dynamic copyWith();
+}
+```
+
+### Global Event Bus
+
+Access the global event bus instance:
+
+```dart
+IEventBus eventBus; // Global singleton
+
+// Send an event directly (rarely needed)
+eventBus.send(MyEvent());
+
+// Listen to events directly (rarely needed)
+eventBus.stream.listen((event) { ... });
+```
+
+### Base Classes
+
+| Class | Description |
+|-------|-------------|
+| `BusPublisherCubit<S>` | Cubit that publishes state to the bus |
+| `BusObserverCubit<S>` | Cubit that observes events from the bus |
+| `BusBridgeCubit<S>` | Cubit that both publishes and observes |
+| `BusPublisherBloc<E, S>` | Bloc that publishes state to the bus |
+| `BusObserverBloc<E, S>` | Bloc that observes events from the bus |
+| `BusBridgeBloc<E, S>` | Bloc that both publishes and observes |
+
+## Best Practices
+
+1. **Keep events simple** - States published to the bus should be immutable data classes
+2. **Use type checking** - In `observe()`, always check the event type before handling
+3. **Don't overuse** - Not every cubit needs to be connected to the bus; use it for cross-cutting concerns
+4. **Consider scope** - The event bus is global; for scoped communication, consider other patterns
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests on [GitHub](https://github.com/salihagic/flutter_bloc_event_bus).

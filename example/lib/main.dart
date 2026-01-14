@@ -1,231 +1,276 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_bloc_event_bus/flutter_bloc_event_bus.dart';
 
-// Can you make a nice README.MD documentation that showcases value of this "flutter_bloc_event_bus" package and that showcases how to use it
-// Please make this as a downloadable file
-
+/// This example demonstrates a real-world authentication flow using
+/// flutter_bloc_event_bus. It shows how different parts of an app can
+/// communicate without direct dependencies.
+///
+/// Components:
+/// - AuthCubit (Publisher): Broadcasts login/logout events
+/// - CartCubit (Bridge): Manages cart AND listens for logout to clear items
+/// - NotificationCubit (Observer): Shows notifications based on events
 void main() {
-  exampleWithCubits();
-  exampleWithBlocs();
+  runApp(const MyApp());
 }
 
-void exampleWithCubits() {
-  // Create an instance of ExampleBusPublisherCubit with an initial state (value = 0).
-  final exampleBusPublisherCubit = ExampleBusPublisherCubit(
-    ExampleBusPublisherState(value: 0),
-  );
-
-  // Create an instance of ExampleBusObserverCubit with an initial state of 0.
-  final exampleBusObserverCubit = ExampleBusObserverCubit(0);
-
-  // Create an instance of ExampleBusBridgeCubit with an initial state (value = 0).
-  final exampleBusBridgeCubit = ExampleBusBridgeCubit(
-    ExampleBusBridgeState(value: 0),
-  );
-
-  // Emit a new event with value = 1 from ExampleBusPublisherCubit.
-  exampleBusPublisherCubit.update(1);
-
-  // The ExampleBusObserverCubit listens to events and prints:
-  // "New worker state with value: 1 (detected in [ExampleBusObserverCubit])" to console.
-  // The ExampleBusBridgeCubit listens to events and prints:
-  // "New worker state with value: 1 (detected in [ExampleBusBridgeCubit])" to console.
-
-  exampleBusBridgeCubit.update(1);
-
-  // The ExampleBusObserverCubit listens to the event from ExampleBusBridgeCubit
-  // and prints: "New worker-listener state with value: 1 (detected in [ExampleBusObserverCubit])" to console.
-
-  exampleBusBridgeCubit.update(2);
-
-  // The ExampleBusObserverCubit listens to the event from ExampleBusBridgeCubit
-  // and prints: "New worker-listener state with value: 2 (detected in [ExampleBusObserverCubit])" to console.
-}
-
-// Defines a custom event type that will be emitted by ExampleBusPublisherCubit.
-class ExampleBusPublisherState implements Event {
-  final int value;
-
-  ExampleBusPublisherState({required this.value});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
-  ExampleBusPublisherState copyWith({int? value}) {
-    return ExampleBusPublisherState(value: value ?? this.value);
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => AuthCubit()),
+        BlocProvider(create: (_) => CartCubit()),
+        BlocProvider(create: (_) => NotificationCubit()),
+      ],
+      child: MaterialApp(
+        title: 'Event Bus Example',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const HomePage(),
+      ),
+    );
   }
 }
 
-// A cubit that acts as an event provider, emitting ExampleBusPublisherState events.
-class ExampleBusPublisherCubit
-    extends BusPublisherCubit<ExampleBusPublisherState> {
-  ExampleBusPublisherCubit(super.initialState);
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
-  // Method to update the state by emitting a new event with a given value.
-  void update(int value) => emit(ExampleBusPublisherState(value: value));
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Event Bus Demo'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: BlocListener<NotificationCubit, String?>(
+        listener: (context, message) {
+          if (message != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message)),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Auth Status Card
+              BlocBuilder<AuthCubit, AuthState>(
+                builder: (context, state) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Icon(
+                            state.isLoggedIn
+                                ? Icons.person
+                                : Icons.person_outline,
+                            size: 48,
+                            color: state.isLoggedIn ? Colors.green : Colors.grey,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            state.isLoggedIn
+                                ? 'Welcome, ${state.userName}!'
+                                : 'Not logged in',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (state.isLoggedIn) {
+                                context.read<AuthCubit>().logout();
+                              } else {
+                                context.read<AuthCubit>().login('John Doe');
+                              }
+                            },
+                            child: Text(state.isLoggedIn ? 'Logout' : 'Login'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Cart Card
+              BlocBuilder<CartCubit, CartState>(
+                builder: (context, state) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.shopping_cart),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Cart (${state.items.length} items)',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (state.items.isEmpty)
+                            const Text('Your cart is empty')
+                          else
+                            ...state.items.map(
+                              (item) => Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                child: Text('- $item'),
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, authState) {
+                              return ElevatedButton.icon(
+                                onPressed: authState.isLoggedIn
+                                    ? () => context.read<CartCubit>().addItem(
+                                          'Item ${state.items.length + 1}',
+                                        )
+                                    : null,
+                                icon: const Icon(Icons.add),
+                                label: Text(
+                                  authState.isLoggedIn
+                                      ? 'Add Item'
+                                      : 'Login to add items',
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Info Card
+              Card(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'How it works:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      Text('- AuthCubit publishes login/logout events'),
+                      Text(
+                          '- CartCubit observes auth events and clears on logout'),
+                      Text(
+                          '- NotificationCubit observes all events for alerts'),
+                      SizedBox(height: 8),
+                      Text(
+                        'Try logging in, adding items, then logging out!',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-// A cubit that listens to events from event providers and reacts accordingly.
-class ExampleBusObserverCubit extends BusObserverCubit<int> {
-  ExampleBusObserverCubit(super.initialState);
+// =============================================================================
+// AUTH CUBIT (Publisher)
+// Publishes authentication state changes to the event bus
+// =============================================================================
+
+class AuthState implements Event {
+  final String? userName;
+
+  bool get isLoggedIn => userName != null;
+
+  const AuthState({this.userName});
+
+  @override
+  AuthState copyWith({String? userName}) {
+    return AuthState(userName: userName ?? this.userName);
+  }
+}
+
+class AuthCubit extends BusPublisherCubit<AuthState> {
+  AuthCubit() : super(const AuthState());
+
+  void login(String name) => emit(AuthState(userName: name));
+
+  void logout() => emit(const AuthState());
+}
+
+// =============================================================================
+// CART CUBIT (Bridge)
+// Publishes cart state AND observes auth events to clear cart on logout
+// =============================================================================
+
+class CartState implements Event {
+  final List<String> items;
+
+  const CartState({this.items = const []});
+
+  @override
+  CartState copyWith({List<String>? items}) {
+    return CartState(items: items ?? this.items);
+  }
+}
+
+class CartCubit extends BusBridgeCubit<CartState> {
+  CartCubit() : super(const CartState());
+
+  void addItem(String item) {
+    emit(CartState(items: [...state.items, item]));
+  }
+
+  void clear() => emit(const CartState());
 
   @override
   void observe(Object event) {
-    // If the event is of type ExampleBusPublisherState, print a message to the console.
-    if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverCubit])',
-      );
-    }
-
-    // If the event is of type ExampleBusBridgeState, print a different message.
-    if (event is ExampleBusBridgeState) {
-      debugPrint(
-        'New ExampleBusBridgeState state with value: ${event.value} (detected in [ExampleBusObserverCubit])',
-      );
+    // When user logs out, clear the cart
+    if (event is AuthState && !event.isLoggedIn) {
+      clear();
     }
   }
 }
 
-// Defines a different event type that will be emitted by ExampleBusBridgeCubit.
-class ExampleBusBridgeState implements Event {
-  final int value;
+// =============================================================================
+// NOTIFICATION CUBIT (Observer)
+// Observes events from the bus and shows notifications
+// =============================================================================
 
-  ExampleBusBridgeState({required this.value});
-
-  @override
-  ExampleBusBridgeState copyWith({int? value}) {
-    return ExampleBusBridgeState(value: value ?? this.value);
-  }
-}
-
-// A cubit that emits ExampleBusBridgeState events.
-class ExampleBusBridgeCubit extends BusBridgeCubit<ExampleBusBridgeState> {
-  ExampleBusBridgeCubit(super.initialState);
-
-  // Method to update the state by emitting a new ExampleBusBridgeState event.
-  void update(int value) => emit(ExampleBusBridgeState(value: value));
+class NotificationCubit extends BusObserverCubit<String?> {
+  NotificationCubit() : super(null);
 
   @override
   void observe(Object event) {
-    // If the event is of type ExampleBusPublisherState, print a message.
-    if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeCubit])',
-      );
-    }
-  }
-}
-
-void exampleWithBlocs() {
-  // Create an instance of ExampleBusPublisherBloc with an initial state (value = 0).
-  final exampleBusPublisherBloc = ExampleBusPublisherBloc(
-    ExampleBusPublisherState(value: 0),
-  );
-
-  // Create an instance of ExampleBusObserverBloc with an initial state of 0.
-  final exampleBusObserverBloc = ExampleBusObserverBloc(0);
-
-  // Create an instance of ExampleBusBridgeBloc with an initial state (value = 0).
-  final exampleBusBridgeBloc = ExampleBusBridgeBloc(
-    ExampleBusBridgeState(value: 0),
-  );
-
-  // Dispatch a new event with value = 1 to ExampleBusPublisherBloc.
-  exampleBusPublisherBloc.add(ExampleBusPublisherEvent(value: 1));
-
-  // The ExampleBusObserverBloc listens to this event and prints:
-  // "New worker state with value: 1 (detected in [ExampleBusObserverBloc])" to console.
-  // The ExampleBusBridgeBloc also listens to this event and prints:
-  // "New worker state with value: 1 (detected in [ExampleBusBridgeBloc])" to console.
-
-  exampleBusBridgeBloc.add(ExampleBusBridgeEvent(value: 1));
-
-  // The ExampleBusObserverBloc listens to this event from ExampleBusBridgeBloc
-  // and prints: "New worker-listener state with value: 1 (detected in [ExampleBusObserverBloc])" to console.
-
-  exampleBusBridgeBloc.add(ExampleBusBridgeEvent(value: 2));
-
-  // The ExampleBusObserverBloc listens to this event from ExampleBusBridgeBloc
-  // and prints: "New worker-listener state with value: 2 (detected in [ExampleBusObserverBloc])" to console.
-}
-
-// Defines a custom event type that will be dispatched to ExampleBusPublisherBloc.
-class ExampleBusPublisherEvent {
-  final int value;
-
-  ExampleBusPublisherEvent({required this.value});
-}
-
-// A Bloc that acts as an event provider, emitting ExampleBusPublisherState states.
-class ExampleBusPublisherBloc
-    extends
-        BusPublisherBloc<ExampleBusPublisherEvent, ExampleBusPublisherState> {
-  ExampleBusPublisherBloc(super.initialState) {
-    on<ExampleBusPublisherEvent>(_update);
-  }
-
-  // Method to update the state by emitting a new state with a given value.
-  Future<void> _update(
-    ExampleBusPublisherEvent event,
-    Emitter<ExampleBusPublisherState> emit,
-  ) async => emit(ExampleBusPublisherState(value: event.value));
-}
-
-// Defines a generic event type that ExampleBusObserverBloc will observe.
-class ExampleBusObserverEvent {}
-
-// A Bloc that listens to events from event providers and reacts accordingly.
-class ExampleBusObserverBloc
-    extends BusObserverBloc<ExampleBusObserverEvent, int> {
-  ExampleBusObserverBloc(super.initialState);
-
-  @override
-  void observe(Object event) {
-    // If the event is of type ExampleBusPublisherState, print a message to the console.
-    if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusObserverBloc])',
-      );
-    }
-
-    // If the event is of type ExampleBusBridgeState, print a different message.
-    if (event is ExampleBusBridgeState) {
-      debugPrint(
-        'New ExampleBusBridgeState state with value: ${event.value} (detected in [ExampleBusObserverBloc])',
-      );
-    }
-  }
-}
-
-// Defines a different event type that will be dispatched to ExampleBusBridgeBloc.
-class ExampleBusBridgeEvent {
-  final int value;
-
-  ExampleBusBridgeEvent({required this.value});
-}
-
-// A Bloc that emits ExampleBusBridgeState states.
-class ExampleBusBridgeBloc
-    extends BusBridgeBloc<ExampleBusBridgeEvent, ExampleBusBridgeState> {
-  ExampleBusBridgeBloc(super.initialState) {
-    on<ExampleBusBridgeEvent>(_update);
-  }
-
-  // Method to update the state by emitting a new ExampleBusBridgeState.
-  Future<void> _update(
-    ExampleBusBridgeEvent event,
-    Emitter<ExampleBusBridgeState> emit,
-  ) async => emit(ExampleBusBridgeState(value: event.value));
-
-  @override
-  void observe(Object event) {
-    // If the event is of type ExampleBusPublisherState, print a message.
-    if (event is ExampleBusPublisherState) {
-      debugPrint(
-        'New ExampleBusPublisherState with value: ${event.value} (detected in [ExampleBusBridgeBloc])',
-      );
+    if (event is AuthState) {
+      if (event.isLoggedIn) {
+        emit('Welcome back, ${event.userName}!');
+      } else {
+        emit('You have been logged out');
+      }
+    } else if (event is CartState && event.items.isNotEmpty) {
+      emit('Cart updated: ${event.items.length} items');
     }
   }
 }
