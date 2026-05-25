@@ -1,10 +1,10 @@
 name: flutter_bloc_event_bus
 description: "Event-driven communication between components built on top of flutter_bloc"
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/salihagic/flutter_bloc_event_bus
 
 environment:
-  sdk: ^3.10.4
+  sdk: ^3.10.7
 
 dependencies:
   flutter:
